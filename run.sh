@@ -1,11 +1,39 @@
 #!/bin/bash
+iptables -t filter -A OUTPUT -m state ! --state NEW -j ACCEPT
+iptables -t filter -A OUTPUT -o lo -j ACCEPT
+iptables -t filter -A OUTPUT -m owner --uid-owner root -j ACCEPT
+iptables -t filter -A OUTPUT -m owner --gid-owner root -j ACCEPT
 
-# iptables -t filter -A OUTPUT -m state --state NEW -j ACCEPT
-# iptables -t filter -A OUTPUT -p udp -j DROP
-# iptables -t filter -A OUTPUT -p icmp -j DROP
+[[ "$blacklistdest" != "" ]] && [[ "$blacklistdest" != "None" ]] && for host in $blacklistdest ; do
+ iptables -t filter -A OUTPUT -d $host -j DROP
+done
+[[ "$blacklistport" != "" ]] && [[ "$blacklistport" != "None" ]] && for port in $blacklistport ; do
+ proto="tcp"
+ echo $port | grep ":" &> /dev/null
+ if [[ $? -eq 0 ]] ; then
+  proto=$(echo $port | awk -F":" '{ print $2 }')
+  port=$(echo $port | awk -F":" '{ print $1 }')
+ fi
+ iptables -t filter -A OUTPUT -p $proto --dport $port -j DROP
+done
+[[ "$allowddest" != "" ]] && [[ "$allowddest" != "None" ]] && for host in $allowddest ; do
+ iptables -t filter -A OUTPUT -d $host -j ACCEPT
+done
+[[ "$allowdport" != "" ]] && [[ "$allowdport" != "None" ]] && for port in $allowdport ; do
+ proto="tcp"
+ echo $port | grep ":" &> /dev/null
+ if [[ $? -eq 0 ]] ; then
+  proto=$(echo $port | awk -F":" '{ print $2 }')
+  port=$(echo $port | awk -F":" '{ print $1 }')
+ fi
+ iptables -t filter -A OUTPUT -p $proto --dport $port -j ACCEPT
+done
 
-# sleep 1
-
+if [[ "$defaultrule" != "ACCEPT" ]] ; then
+ iptables -t filter -A OUTPUT -j DROP
+else
+ iptables -t filter -A OUTPUT -j ACCEPT
+fi
 while true ; do
  netstat -netupa | grep 5900 &> /dev/null
  if [[ $? -ne 0 ]] ; then
