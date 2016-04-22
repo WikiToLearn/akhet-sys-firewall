@@ -5,7 +5,7 @@ iptables -t filter -A OUTPUT -m owner --uid-owner root -j ACCEPT
 iptables -t filter -A OUTPUT -m owner --gid-owner root -j ACCEPT
 
 [[ "$blacklistdest" != "" ]] && [[ "$blacklistdest" != "None" ]] && for host in $blacklistdest ; do
- iptables -t filter -A OUTPUT -d $host -j DROP
+ iptables -t filter -A OUTPUT -d $host -j REJECT
 done
 [[ "$blacklistport" != "" ]] && [[ "$blacklistport" != "None" ]] && for port in $blacklistport ; do
  proto="tcp"
@@ -14,7 +14,7 @@ done
   proto=$(echo $port | awk -F":" '{ print $2 }')
   port=$(echo $port | awk -F":" '{ print $1 }')
  fi
- iptables -t filter -A OUTPUT -p $proto --dport $port -j DROP
+ iptables -t filter -A OUTPUT -p $proto --dport $port -j REJECT
 done
 [[ "$allowddest" != "" ]] && [[ "$allowddest" != "None" ]] && for host in $allowddest ; do
  iptables -t filter -A OUTPUT -d $host -j ACCEPT
@@ -30,7 +30,7 @@ done
 done
 
 if [[ "$defaultrule" != "ACCEPT" ]] ; then
- iptables -t filter -A OUTPUT -j DROP
+ iptables -t filter -A OUTPUT -j REJECT
 else
  iptables -t filter -A OUTPUT -j ACCEPT
 fi
