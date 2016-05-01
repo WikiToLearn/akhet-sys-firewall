@@ -50,8 +50,7 @@ else
  sleep 1
 done
 
-START_TIME=$(date +%s)
-while [[ $(($(date +%s)-$START_TIME)) -lt 300 ]] ; do # max 5 minutes
+while true ; do
  netstat -netupa | grep 5900 &> /dev/null
  if [[ $? -ne 0 ]] ; then
   echo "Exit now"
